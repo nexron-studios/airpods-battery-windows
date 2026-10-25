@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+@import './tokens.css';
+@import './debug.css';
+
+html,
+body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Tilts the model back and forth in 3D and lifts it slightly */
+@keyframes device-float {
+  from {
+    transform: perspective(14rem) rotateY(-16deg) rotateX(8deg) translateY(1px);
+  }
+  to {
+    transform: perspective(14rem) rotateY(16deg) rotateX(-5deg) translateY(-2px);
+  }
+}
+
+/* The contact shadow shrinks while the model lifts */
+@keyframes device-ground {
+  from {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: scaleX(0.75);
+    opacity: 0.6;
+  }
+}
+
+/* A highlight crosses the surface once per cycle */
+@keyframes device-sheen {
+  0%,
+  60% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+
+@keyframes charge-pulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

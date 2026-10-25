@@ -1,0 +1,66 @@
+/**
+ * Pebble — design tokens for the battery widget.
+ *
+ * A small piece of dark glass on the desktop. Colour carries meaning here:
+ *   level-ok   → a battery that is fine or charging
+ *   level-low  → a battery at or below the low threshold, and nothing else
+ *   ink        → content; ink-muted for labels and notices
+ *   device-*   → only the rendered iPhone model, never UI chrome
+ * Nothing else is allowed to introduce a hue.
+ */
+@theme {
+  --font-sans: 'Inter Variable', 'Segoe UI Variable Text', system-ui, sans-serif;
+
+  --color-surface: rgb(24 25 28 / 0.95);
+  --color-surface-edge: rgb(255 255 255 / 0.09);
+  --color-ink: #f5f5f7;
+  --color-ink-muted: rgb(235 235 245 / 0.55);
+  --color-track: rgb(255 255 255 / 0.1);
+  --color-level-ok: #32d74b;
+  --color-level-low: #ff453a;
+
+  --color-device-frame: #a8abb1;
+  --color-device-frame-shade: #55585e;
+  --color-device-screen: #0a0d18;
+  --color-device-wallpaper: #4b5bdc;
+  --color-device-wallpaper-glow: #c06cf0;
+  --color-device-sheen: rgb(255 255 255 / 0.6);
+  --color-device-ground: rgb(0 0 0 / 0.45);
+
+  /* Ratio 1.2 from 11 px */
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1.35;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.3;
+  --text-value: 0.9375rem;
+  --text-value--line-height: 1.1;
+
+  --radius-card: 1.375rem;
+  --radius-chip: 0.5rem;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.35);
+
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+
+  /* Idle loops are the deliberate exception to the 300 ms ceiling: they are
+     ambient, never block input, and stop entirely under reduced motion. */
+  --animate-device-float: device-float 4.8s var(--ease-in-out-sine) infinite alternate;
+  --animate-device-ground: device-ground 4.8s var(--ease-in-out-sine) infinite alternate;
+  --animate-device-sheen: device-sheen 6s var(--ease-in-out-sine) infinite;
+  --animate-charge-pulse: charge-pulse 1.6s var(--ease-in-out-sine) infinite;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-surface: rgb(246 246 248 / 0.96);
+    --color-surface-edge: rgb(0 0 0 / 0.08);
+    --color-ink: #1d1d1f;
+    --color-ink-muted: rgb(60 60 67 / 0.62);
+    --color-track: rgb(0 0 0 / 0.09);
+    --color-level-ok: #28cd41;
+    --color-level-low: #ff3b30;
+    --color-device-ground: rgb(0 0 0 / 0.22);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.12), 0 6px 18px rgb(0 0 0 / 0.16);
+  }
+}

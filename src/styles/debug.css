@@ -1,0 +1,105 @@
+/* ---------------------------------------------------------------------------
+   Debug helpers — layout scaffolding.
+
+   Import once from main.css:
+
+       @import './debug.css';
+
+   Then drop a class on any element to see its box. These are scaffolding:
+   grep for `debug-` and remove every hit before committing.
+   --------------------------------------------------------------------------- */
+
+@utility debug-red {
+  outline: 2px solid rgb(239 68 68) !important;
+  outline-offset: -2px;
+  background-color: rgb(239 68 68 / 0.15) !important;
+}
+
+@utility debug-blue {
+  outline: 2px solid rgb(59 130 246) !important;
+  outline-offset: -2px;
+  background-color: rgb(59 130 246 / 0.15) !important;
+}
+
+@utility debug-green {
+  outline: 2px solid rgb(34 197 94) !important;
+  outline-offset: -2px;
+  background-color: rgb(34 197 94 / 0.15) !important;
+}
+
+@utility debug-yellow {
+  outline: 2px solid rgb(234 179 8) !important;
+  outline-offset: -2px;
+  background-color: rgb(234 179 8 / 0.15) !important;
+}
+
+@utility debug-purple {
+  outline: 2px solid rgb(168 85 247) !important;
+  outline-offset: -2px;
+  background-color: rgb(168 85 247 / 0.15) !important;
+}
+
+@utility debug-orange {
+  outline: 2px solid rgb(249 115 22) !important;
+  outline-offset: -2px;
+  background-color: rgb(249 115 22 / 0.15) !important;
+}
+
+@utility debug-pink {
+  outline: 2px solid rgb(236 72 153) !important;
+  outline-offset: -2px;
+  background-color: rgb(236 72 153 / 0.15) !important;
+}
+
+@utility debug-cyan {
+  outline: 2px solid rgb(6 182 212) !important;
+  outline-offset: -2px;
+  background-color: rgb(6 182 212 / 0.15) !important;
+}
+
+/* Outline only — for when the tint hides the content you are looking at. */
+@utility debug-outline {
+  outline: 2px solid rgb(239 68 68) !important;
+  outline-offset: -2px;
+}
+
+/* Outline every direct child, cycling colors, so you can see how a flex or
+   grid container is distributing them. */
+@utility debug-kids {
+  & > * {
+    outline: 1px dashed rgb(239 68 68 / 0.8) !important;
+    outline-offset: -1px;
+  }
+  & > *:nth-child(3n + 2) {
+    outline-color: rgb(59 130 246 / 0.8) !important;
+  }
+  & > *:nth-child(3n + 3) {
+    outline-color: rgb(34 197 94 / 0.8) !important;
+  }
+}
+
+/* Every descendant. Loud on purpose — use it to find the one element that is
+   wider than its parent. */
+@utility debug-tree {
+  & * {
+    outline: 1px solid rgb(239 68 68 / 0.35) !important;
+    outline-offset: -1px;
+  }
+}
+
+/* An 8px baseline grid on top of the element, to check vertical rhythm and
+   spacing. Does not affect layout — it is a pseudo-element overlay. */
+@utility debug-grid {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(to right, rgb(239 68 68 / 0.18) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(to bottom, rgb(59 130 246 / 0.18) 0 1px, transparent 1px 8px);
+  }
+}
