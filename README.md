@@ -41,7 +41,7 @@ battery Windows already knows (your iPhone, a keyboard, a mouse) shows up next t
 
 ## Install
 
-1. Download `Battery Widget_x.y.z_x64-setup.exe` from the
+1. Download `Battery-Widget_x.y.z_x64-setup.exe` from the
    [latest release](../../releases/latest) and run it. It installs for your user
    only and needs no admin rights.
 2. Windows SmartScreen will warn you because the installer is not code-signed.
