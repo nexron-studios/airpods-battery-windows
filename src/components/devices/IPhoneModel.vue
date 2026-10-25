@@ -9,7 +9,7 @@
         />
         <div class="absolute top-[6%] left-1/2 h-[6%] w-[36%] -translate-x-1/2 rounded-full bg-device-screen" />
         <div
-          class="absolute inset-y-0 w-1/2 bg-linear-to-r from-transparent via-device-sheen to-transparent animate-device-sheen"
+          class="absolute inset-y-0 w-1/2 bg-linear-to-r from-transparent via-device-glint to-transparent animate-device-sheen"
         />
       </div>
     </div>

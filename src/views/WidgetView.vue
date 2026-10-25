@@ -9,8 +9,6 @@ import { useWidgetWindow } from '@/composables/useWidgetWindow'
 import type { AirPodsStatus } from '@/types/snapshot.type'
 import { airPodsNoticeOf, airPodsTilesOf, deviceTilesOf } from '@/utils/battery'
 
-/** Spreads the idle loops of neighbouring models across one cycle */
-const PHASE_STEP_MS = 1300
 /** Staleness is measured in minutes, so the clock does not need to tick faster */
 const CLOCK_INTERVAL_MS = 15_000
 const WAITING: AirPodsStatus = { status: 'waiting' }
@@ -61,14 +59,14 @@ const noticeText = computed((): string | null => {
           v-for="(tile, index) in airPodsTiles"
           :key="tile.id"
           v-bind="tile"
-          :phaseMs="index * PHASE_STEP_MS"
+          :order="index"
         />
         <div v-if="deviceTiles.length" class="mx-1.5 mt-2 h-10 w-px bg-surface-edge" aria-hidden="true" />
         <BatteryTile
           v-for="(tile, index) in deviceTiles"
           :key="tile.id"
           v-bind="tile"
-          :phaseMs="(index + airPodsTiles.length) * PHASE_STEP_MS"
+          :order="index + airPodsTiles.length"
         />
       </div>
       <p v-if="noticeText" class="mt-2 w-0 min-w-full text-center text-caption text-ink-muted">

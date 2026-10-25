@@ -24,7 +24,8 @@
   --color-device-screen: #0a0d18;
   --color-device-wallpaper: #4b5bdc;
   --color-device-wallpaper-glow: #c06cf0;
-  --color-device-sheen: rgb(255 255 255 / 0.6);
+  /* Cool tint, so the highlight also shows on the white AirPods */
+  --color-device-glint: rgb(196 222 255 / 0.9);
   --color-device-ground: rgb(0 0 0 / 0.45);
 
   /* Ratio 1.2 from 11 px */
@@ -47,7 +48,10 @@
      ambient, never block input, and stop entirely under reduced motion. */
   --animate-device-float: device-float 4.8s var(--ease-in-out-sine) infinite alternate;
   --animate-device-ground: device-ground 4.8s var(--ease-in-out-sine) infinite alternate;
-  --animate-device-sheen: device-sheen 6s var(--ease-in-out-sine) infinite;
+  /* The glint: every 30 s a light sweeps across the models while they turn
+     towards it. --glint-delay staggers it into a wave across the tiles. */
+  --animate-device-sheen: device-sheen 30s var(--ease-in-out-sine) var(--glint-delay, 0ms) infinite;
+  --animate-device-pop: device-pop 30s var(--ease-in-out-sine) var(--glint-delay, 0ms) infinite;
   --animate-charge-pulse: charge-pulse 1.6s var(--ease-in-out-sine) infinite;
 }
 

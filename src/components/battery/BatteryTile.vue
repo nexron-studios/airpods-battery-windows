@@ -8,9 +8,7 @@ import type { BatteryTileProps } from '@/types/battery.type'
 import { toneOf } from '@/utils/battery'
 import { formatPercent } from '@/utils/format'
 
-const { kind, name, level, isStale, phaseMs } = defineProps<
-  Omit<BatteryTileProps, 'id'> & { phaseMs: number }
->()
+const { kind, name, level, isStale, order } = defineProps<Omit<BatteryTileProps, 'id'> & { order: number }>()
 
 const { t, locale } = useI18n()
 
@@ -30,7 +28,7 @@ const ariaLabel = computed(() => {
     <div class="relative size-14" :class="{ 'opacity-45': isStale }">
       <BatteryRing class="absolute inset-0 size-full" :percent="level?.percent ?? null" :tone="toneOf(level)" />
       <div class="absolute inset-2.5">
-        <DeviceModel :kind :phaseMs />
+        <DeviceModel :kind :order />
       </div>
       <div
         v-if="isCharging"

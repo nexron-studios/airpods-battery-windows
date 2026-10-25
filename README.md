@@ -2,11 +2,11 @@
   <img src="docs/widget.gif" alt="Battery Widget showing AirPods left, right, case and iPhone battery levels" width="420">
 </p>
 
-<h1 align="center">Battery Widget</h1>
+<h1 align="center">AirPods Battery Widget for Windows</h1>
 
 <p align="center">
-  A small, always-on-top Windows widget that shows the <b>real</b> battery levels of your
-  AirPods (left, right, case) and your iPhone, like the battery widget on iOS.
+  See the <b>exact</b> battery level of your AirPods (left, right, case) and your iPhone
+  on Windows 10 and 11. A small always-on-top desktop widget, like the battery widget on iOS.
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@ AirPodsDesktop read it from the Bluetooth advert the AirPods broadcast, but
 0 % or 10 % steps. The real values are still in the advert, encrypted with a key
 that only your Apple devices know.
 
-Battery Widget decrypts them with that key, so you see the exact percentage for
+This widget decrypts them with that key, so you see the exact percentage for
 each pod and the case. Everything else comes for free: any Bluetooth device whose
 battery Windows already knows (your iPhone, a keyboard, a mouse) shows up next to it.
 
@@ -33,7 +33,7 @@ battery Windows already knows (your iPhone, a keyboard, a mouse) shows up next t
 
 - Exact levels for left, right and case, with a charging indicator
 - iPhone and every other Bluetooth device Windows reports a battery for
-- Small animated 3D models, a ring per device, red at 20 % and below
+- Small animated 3D models with a light sweep every 30 s, a ring per device, red at 20 % and below
 - Drag it anywhere; it remembers where you put it
 - Follows the Windows light or dark theme
 - Starts with Windows, sits in the tray, no window in the taskbar

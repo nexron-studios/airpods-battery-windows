@@ -12,7 +12,7 @@ const sheenMask = computed(() => ({ maskImage: `url(${src})`, maskSize: '100% 10
     <img :src class="h-full w-auto" alt="" draggable="false" />
     <div class="pointer-events-none absolute inset-0 overflow-hidden" :style="sheenMask">
       <div
-        class="absolute inset-y-0 w-1/2 bg-linear-to-r from-transparent via-device-sheen to-transparent animate-device-sheen"
+        class="absolute inset-y-0 w-1/2 bg-linear-to-r from-transparent via-device-glint to-transparent animate-device-sheen"
       />
     </div>
   </div>
