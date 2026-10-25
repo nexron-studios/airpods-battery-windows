@@ -33,7 +33,7 @@ battery Windows already knows (your iPhone, a keyboard, a mouse) shows up next t
 
 - Exact levels for left, right and case, with a charging indicator
 - iPhone and every other Bluetooth device Windows reports a battery for
-- Small animated 3D models with a light sweep every 30 s, a ring per device, red at 20 % and below
+- Rendered 3D models that turn once every 30 s, a ring per device, red at 20 % and below
 - Drag it anywhere; it remembers where you put it
 - Follows the Windows light or dark theme
 - Starts with Windows, sits in the tray, no window in the taskbar
@@ -148,6 +148,7 @@ Add the name exactly as the widget shows it to `hiddenDevices`, e.g.
 | Decrypt the last 16 bytes with AES-128 and `MagicAccEncKey`, match the random address with `MagicAccIRK` | `src-tauri/src/airpods.rs` |
 | Battery levels Windows knows: PnP property `{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2` on `BTHLE\DEV_*` | `src-tauri/src/device_battery.rs` |
 | Widget UI | `src/` (Vue 3, Tailwind 4) |
+| 3D models: built from primitives and rendered as a full turn in Blender | `tools/render-models/` |
 
 Built with [Tauri 2](https://tauri.app), Rust and Vue 3.
 
@@ -163,12 +164,20 @@ cd src-tauri && cargo test
 npm run tauri build   # installer in src-tauri/target/release/bundle/nsis
 ```
 
+The device models are rendered with Blender 5 (Cycles). To change one, edit
+`tools/render-models/render_models.py`, then:
+
+```sh
+cd tools/render-models
+blender --background --factory-startup --python render_models.py -- --model iphone --out <dir>/iphone
+python build_sprites.py <dir> ../../src/assets/devices   # needs all four models rendered
+```
+
 ## Credits
 
 - [LibrePods](https://github.com/librepods-org/librepods) worked out the
   encrypted battery layout this widget decodes.
-- The AirPods images come from
-  [AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) (GPL-3.0).
+- The device models are our own, modelled in code in `tools/render-models/`.
 
 AirPods and iPhone are trademarks of Apple Inc. This project is not affiliated
 with Apple.

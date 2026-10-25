@@ -27,7 +27,7 @@ const ariaLabel = computed(() => {
   <div class="flex w-16 flex-col items-center gap-1" role="img" :aria-label="ariaLabel">
     <div class="relative size-14" :class="{ 'opacity-45': isStale }">
       <BatteryRing class="absolute inset-0 size-full" :percent="level?.percent ?? null" :tone="toneOf(level)" />
-      <div class="absolute inset-2.5">
+      <div class="absolute inset-1">
         <DeviceModel :kind :order />
       </div>
       <div

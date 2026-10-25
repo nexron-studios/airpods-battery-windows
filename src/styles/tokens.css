@@ -5,7 +5,7 @@
  *   level-ok   → a battery that is fine or charging
  *   level-low  → a battery at or below the low threshold, and nothing else
  *   ink        → content; ink-muted for labels and notices
- *   device-*   → only the rendered iPhone model, never UI chrome
+ *   device-*   → only the stage under the rendered device models, never UI chrome
  * Nothing else is allowed to introduce a hue.
  */
 @theme {
@@ -19,13 +19,6 @@
   --color-level-ok: #32d74b;
   --color-level-low: #ff453a;
 
-  --color-device-frame: #a8abb1;
-  --color-device-frame-shade: #55585e;
-  --color-device-screen: #0a0d18;
-  --color-device-wallpaper: #4b5bdc;
-  --color-device-wallpaper-glow: #c06cf0;
-  /* Cool tint, so the highlight also shows on the white AirPods */
-  --color-device-glint: rgb(196 222 255 / 0.9);
   --color-device-ground: rgb(0 0 0 / 0.45);
 
   /* Ratio 1.2 from 11 px */
@@ -48,10 +41,9 @@
      ambient, never block input, and stop entirely under reduced motion. */
   --animate-device-float: device-float 4.8s var(--ease-in-out-sine) infinite alternate;
   --animate-device-ground: device-ground 4.8s var(--ease-in-out-sine) infinite alternate;
-  /* The glint: every 30 s a light sweeps across the models while they turn
-     towards it. --glint-delay staggers it into a wave across the tiles. */
-  --animate-device-sheen: device-sheen 30s var(--ease-in-out-sine) var(--glint-delay, 0ms) infinite;
-  --animate-device-pop: device-pop 30s var(--ease-in-out-sine) var(--glint-delay, 0ms) infinite;
+  /* Every 30 s each model turns once; --turn-delay staggers it into a wave
+     across the tiles. The easing lives in the keyframes as step segments. */
+  --animate-device-turn: device-turn 30s linear var(--turn-delay, 0ms) infinite;
   --animate-charge-pulse: charge-pulse 1.6s var(--ease-in-out-sine) infinite;
 }
 
