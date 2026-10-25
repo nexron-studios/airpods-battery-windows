@@ -17,7 +17,6 @@ const MIN_ADVERT_LEN: usize = 27;
 const STATUS_INDEX: usize = 5;
 const ENCRYPTED_PAYLOAD_LEN: usize = 16;
 const STATUS_LEFT_IS_PRIMARY: u8 = 0x20;
-const STATUS_PRIMARY_IN_CASE: u8 = 0x40;
 const CHARGING_BIT: u8 = 0x80;
 const LEVEL_MASK: u8 = 0x7F;
 const MAX_LEVEL: u8 = 100;
@@ -45,6 +44,27 @@ impl AirPodsBattery {
             left: newer.left.or(self.left),
             right: newer.right.or(self.right),
             case: newer.case.or(self.case),
+        }
+    }
+}
+
+/// When each part last reported a level, in ms since the epoch. A pod lying in
+/// the closed case goes silent while the other one keeps reporting, so every
+/// part ages on its own.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+pub struct PartsSeen {
+    pub left: Option<u64>,
+    pub right: Option<u64>,
+    pub case: Option<u64>,
+}
+
+impl PartsSeen {
+    pub fn record(self, reported: &AirPodsBattery, now_ms: u64) -> PartsSeen {
+        let stamp = |level: Option<Level>, previous: Option<u64>| level.map(|_| now_ms).or(previous);
+        PartsSeen {
+            left: stamp(reported.left, self.left),
+            right: stamp(reported.right, self.right),
+            case: stamp(reported.case, self.case),
         }
     }
 }
@@ -93,8 +113,10 @@ pub fn parse_advert(data: &[u8], enc_key: &Key) -> Option<AirPodsBattery> {
     } else {
         (secondary, primary)
     };
-    let case = if status & STATUS_PRIMARY_IN_CASE != 0 { level(plain[3]) } else { None };
-    Some(AirPodsBattery { left, right, case })
+    // No status bit gates the case level: while charging, AirPods 4 send status
+    // 0x04 without the "this pod in case" bit (0x40) and still a valid case
+    // level. An unreported level is 0x7F, which `level` already drops.
+    Some(AirPodsBattery { left, right, case: level(plain[3]) })
 }
 
 #[cfg(test)]
@@ -131,10 +153,19 @@ mod tests {
     }
 
     #[test]
-    fn right_primary_swaps_pods_and_hides_case_when_out_of_case() {
-        let battery = parse_advert(&advert(0x0B, [0, 80, 75, 50]), &KEY);
+    fn right_primary_swaps_pods() {
+        let battery = parse_advert(&advert(0x0B, [0, 80, 75, 0x7F]), &KEY);
 
         assert_eq!(battery, Some(AirPodsBattery { left: lvl(75, false), right: lvl(80, false), case: None }));
+    }
+
+    #[test]
+    fn reads_the_case_while_charging_without_the_in_case_bit() {
+        // Captured from AirPods 4 charging in the open case: status 0x04, one pod
+        // at 26 % charging, the other unreported, case at 92 %
+        let battery = parse_advert(&advert(0x04, [0x00, 0x9a, 0xff, 0x5c]), &KEY);
+
+        assert_eq!(battery, Some(AirPodsBattery { left: None, right: lvl(26, true), case: lvl(92, false) }));
     }
 
     #[test]
@@ -161,6 +192,14 @@ mod tests {
             older.merge(newer),
             AirPodsBattery { left: lvl(39, false), right: lvl(41, false), case: lvl(90, true) }
         );
+    }
+
+    #[test]
+    fn record_only_stamps_the_parts_an_advert_reported() {
+        let earlier = PartsSeen { left: Some(1_000), right: Some(1_000), case: None };
+        let reported = AirPodsBattery { left: None, right: lvl(24, false), case: None };
+
+        assert_eq!(earlier.record(&reported, 5_000), PartsSeen { left: Some(1_000), right: Some(5_000), case: None });
     }
 
     #[test]

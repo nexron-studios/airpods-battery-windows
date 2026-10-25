@@ -22,4 +22,5 @@ export type AirPodsNotice =
   | { kind: 'invalid_config' }
   | { kind: 'unavailable' }
   | { kind: 'waiting' }
+  | { kind: 'parts_quiet' }
   | { kind: 'stale'; minutes: number }

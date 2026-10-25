@@ -124,8 +124,11 @@ Add the name exactly as the widget shows it to `hiddenDevices`, e.g.
 - **The case shows "–"** while you wear both pods. AirPods only report the case
   level while at least one pod is inside it. Put one pod in once and the widget
   keeps the last value.
-- **AirPods only broadcast while in use or while the case is open.** In the closed
-  case nothing arrives; after 10 minutes without news the values are dimmed.
+- **AirPods only broadcast while in use or while the case is open.** A pod charging
+  in the closed case stays silent, and the pod in your ear does not pass its level
+  on. Each part is dimmed on its own once its value is older than 10 minutes, so
+  you can always tell a live value from the last known one. Open the case briefly
+  to refresh.
 - **The iPhone level updates while the iPhone is connected via Bluetooth.**
   Windows keeps the last value otherwise.
 - Tested with **AirPods 4 (ANC)**. Other models use the same advert format

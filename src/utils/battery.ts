@@ -1,10 +1,11 @@
 import type { AirPodsNotice, BatteryTileProps, BatteryTone, DeviceKind } from '@/types/battery.type'
-import type { AirPodsBattery, AirPodsStatus, DeviceBattery, Level } from '@/types/snapshot.type'
+import type { AirPodsBattery, AirPodsStatus, DeviceBattery, Level, PartsSeen } from '@/types/snapshot.type'
 
 export const LOW_LEVEL_PERCENT = 20
 export const STALE_AFTER_MS = 10 * 60 * 1000
 const MS_PER_MINUTE = 60 * 1000
 const EMPTY_AIRPODS: AirPodsBattery = { left: null, right: null, case: null }
+const NEVER_SEEN: PartsSeen = { left: null, right: null, case: null }
 
 export const toneOf = (level: Level | null): BatteryTone => {
   if (level === null) return 'unknown'
@@ -17,13 +18,24 @@ export const isAirPodsStale = (airpods: AirPodsStatus, nowMs: number): boolean =
 
 export const deviceKindOf = (name: string): DeviceKind => (/iphone/i.test(name) ? 'iphone' : 'other')
 
+const isPartStale = (seenMs: number | null, nowMs: number): boolean =>
+  seenMs === null || nowMs - seenMs > STALE_AFTER_MS
+
+/** Each part dims on its own: a pod in the closed case goes quiet while the other keeps reporting. */
 export const airPodsTilesOf = (airpods: AirPodsStatus, nowMs: number): BatteryTileProps[] => {
   const battery = airpods.status === 'seen' ? airpods.battery : EMPTY_AIRPODS
-  const isStale = isAirPodsStale(airpods, nowMs)
+  const seen = airpods.status === 'seen' ? airpods.partsSeenMs : NEVER_SEEN
+  const tileOf = (kind: DeviceKind, level: Level | null, seenMs: number | null): BatteryTileProps => ({
+    id: kind,
+    kind,
+    name: null,
+    level,
+    isStale: isPartStale(seenMs, nowMs),
+  })
   return [
-    { id: 'airpod_left', kind: 'airpod_left', name: null, level: battery.left, isStale },
-    { id: 'airpod_right', kind: 'airpod_right', name: null, level: battery.right, isStale },
-    { id: 'airpods_case', kind: 'airpods_case', name: null, level: battery.case, isStale },
+    tileOf('airpod_left', battery.left, seen.left),
+    tileOf('airpod_right', battery.right, seen.right),
+    tileOf('airpods_case', battery.case, seen.case),
   ]
 }
 
@@ -46,9 +58,15 @@ export const airPodsNoticeOf = (airpods: AirPodsStatus, nowMs: number): AirPodsN
       return { kind: 'unavailable' }
     case 'waiting':
       return { kind: 'waiting' }
-    case 'seen':
-      if (!isAirPodsStale(airpods, nowMs)) return { kind: 'none' }
-      return { kind: 'stale', minutes: Math.floor((nowMs - airpods.lastSeenMs) / MS_PER_MINUTE) }
+    case 'seen': {
+      if (isAirPodsStale(airpods, nowMs)) {
+        return { kind: 'stale', minutes: Math.floor((nowMs - airpods.lastSeenMs) / MS_PER_MINUTE) }
+      }
+      // The case only reports while a pod sits in it, so a quiet case alone is normal
+      const { left, right } = airpods.partsSeenMs
+      const isAPodQuiet = [left, right].some((seenMs) => isPartStale(seenMs, nowMs))
+      return isAPodQuiet ? { kind: 'parts_quiet' } : { kind: 'none' }
+    }
     default: {
       const unhandled: never = airpods
       throw new Error(`Unhandled AirPods status: ${JSON.stringify(unhandled)}`)

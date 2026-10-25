@@ -7,7 +7,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::airpods::{self, AirPodsBattery};
+use crate::airpods::{self, AirPodsBattery, PartsSeen};
 use crate::ble_scanner::{AppleAdvert, BleScanner};
 use crate::config::{AirPodsKeys, Config, ConfigError};
 use crate::device_battery::{self, DeviceBattery};
@@ -27,7 +27,7 @@ pub enum AirPodsStatus {
     /// Bluetooth is off or the adapter is gone
     Unavailable,
     Waiting,
-    Seen { battery: AirPodsBattery, last_seen_ms: u64 },
+    Seen { battery: AirPodsBattery, parts_seen_ms: PartsSeen, last_seen_ms: u64 },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -69,15 +69,18 @@ fn handle_advert(app: &AppHandle, keys: &AirPodsKeys, advert: AppleAdvert) {
     }
     let now = now_ms();
     update(app, |snapshot| {
-        let (merged, is_due) = match snapshot.airpods {
-            AirPodsStatus::Seen { battery: known, last_seen_ms } => {
-                let merged = known.merge(battery);
-                (merged, merged != known || now - last_seen_ms >= SEEN_REFRESH_MS)
-            }
-            _ => (battery, true),
+        let (known, parts_seen, last_seen_ms) = match snapshot.airpods {
+            AirPodsStatus::Seen { battery, parts_seen_ms, last_seen_ms } => (battery, parts_seen_ms, Some(last_seen_ms)),
+            _ => (AirPodsBattery::default(), PartsSeen::default(), None),
         };
+        let merged = known.merge(battery);
+        let is_due = merged != known || last_seen_ms.is_none_or(|last| now - last >= SEEN_REFRESH_MS);
         if is_due {
-            snapshot.airpods = AirPodsStatus::Seen { battery: merged, last_seen_ms: now };
+            snapshot.airpods = AirPodsStatus::Seen {
+                battery: merged,
+                parts_seen_ms: parts_seen.record(&battery, now),
+                last_seen_ms: now,
+            };
         }
         is_due
     });

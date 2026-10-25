@@ -35,6 +35,7 @@ const noticeText = computed((): string | null => {
     case 'invalid_config':
     case 'unavailable':
     case 'waiting':
+    case 'parts_quiet':
       return t(`notice.${notice.kind}`)
     case 'stale':
       return t('notice.stale', notice.minutes)

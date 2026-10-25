@@ -9,6 +9,7 @@ export default {
     invalid_config: 'Die config.json ist fehlerhaft. Rechtsklick, Schlüssel einrichten',
     unavailable: 'Bluetooth ist aus',
     waiting: 'Warte auf die AirPods. Öffne kurz das Case.',
+    parts_quiet: 'Ausgegraut heißt veraltet: Case kurz öffnen',
     stale: 'AirPods zuletzt vor einer Minute gesehen | AirPods zuletzt vor {n} Minuten gesehen',
   },
   tile: {

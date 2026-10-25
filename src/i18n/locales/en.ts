@@ -9,6 +9,7 @@ export default {
     invalid_config: 'config.json is invalid. Right-click, Set up keys',
     unavailable: 'Bluetooth is off',
     waiting: 'Waiting for the AirPods. Open the case briefly.',
+    parts_quiet: 'Greyed out means outdated: open the case briefly',
     stale: 'AirPods last seen a minute ago | AirPods last seen {n} minutes ago',
   },
   tile: {

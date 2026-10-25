@@ -11,12 +11,19 @@ export interface AirPodsBattery {
   case: Level | null
 }
 
+/** When each part last reported, in ms since the epoch; `null` if it never has. */
+export interface PartsSeen {
+  left: number | null
+  right: number | null
+  case: number | null
+}
+
 export type AirPodsStatus =
   | { status: 'missing_keys' }
   | { status: 'invalid_config' }
   | { status: 'unavailable' }
   | { status: 'waiting' }
-  | { status: 'seen'; battery: AirPodsBattery; lastSeenMs: number }
+  | { status: 'seen'; battery: AirPodsBattery; partsSeenMs: PartsSeen; lastSeenMs: number }
 
 /** A Bluetooth device whose battery Windows itself knows, e.g. the iPhone. */
 export interface DeviceBattery {
