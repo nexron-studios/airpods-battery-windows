@@ -153,7 +153,7 @@ Add the name exactly as the widget shows it to `hiddenDevices`, e.g.
 | Decrypt the last 16 bytes with AES-128 and `MagicAccEncKey`, match the random address with `MagicAccIRK` | `src-tauri/src/airpods.rs` |
 | Battery levels Windows knows: PnP property `{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2` on `BTHLE\DEV_*` | `src-tauri/src/device_battery.rs` |
 | Widget UI | `src/` (Vue 3, Tailwind 4) |
-| 3D models: built from primitives and rendered as a full turn in Blender | `tools/render-models/` |
+| 3D models: rendered as a full turn in Blender, see [Credits](#credits) | `tools/render-models/` |
 
 Built with [Tauri 2](https://tauri.app), Rust and Vue 3.
 
@@ -169,24 +169,42 @@ cd src-tauri && cargo test
 npm run tauri build   # installer in src-tauri/target/release/bundle/nsis
 ```
 
-The device models are rendered with Blender 5 (Cycles). To change one, edit
-`tools/render-models/render_models.py`, then:
+The device images are rendered with Blender 5 (Cycles) from the two models in
+[Credits](#credits). The model files are not in this repo; download them from
+Sketchfab first. Blender 5 no longer reads the iPhone's COLLADA file, so convert
+it to glTF once (e.g. with `trimesh`), then:
 
 ```sh
 cd tools/render-models
-blender --background --factory-startup --python render_models.py -- --model iphone --out <dir>/iphone
-python build_sprites.py <dir> ../../src/assets/devices   # needs all four models rendered
+python patch_iphone_screen.py <iphone>/textures <iphone>/textures-patched
+blender --background --factory-startup --python render_models.py -- --model iphone --out <dir>/iphone   --iphone-glb <iphone>/iphone.glb --iphone-textures <iphone>/textures-patched
+blender --background --factory-startup --python render_models.py -- --model airpods_case --out <dir>/airpods_case   --airpods-fbx "<airpods>/source/AirPods 4.fbx"
+# ... the same for airpod_left and airpod_right
+python build_sprites.py <dir> ../../src/assets/devices
 ```
+
+Without the model files, `render_models.py` falls back to simple models built
+from primitives.
 
 ## Credits
 
 - [LibrePods](https://github.com/librepods-org/librepods) worked out the
   encrypted battery layout this widget decodes.
-- The device models are our own, modelled in code in `tools/render-models/`.
+- **"[AirPods 4](https://sketchfab.com/3d-models/airpods-4-e44730974131402eb496352cab19c82e)"**
+  by [Falah3D](https://sketchfab.com/3dFalah), licensed under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Changed: split into left pod, right pod and case, case lid closed, rendered as a turn.
+- **"[iPhone 14 Pro](https://sketchfab.com/3d-models/iphone-14-pro-5cb0778041a34f09b409a38c687bb1d4)"**
+  by [mister dude](https://sketchfab.com/misterdude), licensed under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Changed: own wallpaper on the display, opacity map dropped, rendered as a turn.
+
+The rendered device images in `src/assets/devices/` and `docs/` are
+adaptations of these models and are shared under CC BY 4.0 as well.
 
 AirPods and iPhone are trademarks of Apple Inc. This project is not affiliated
 with Apple.
 
 ## License
 
-[GPL-3.0](LICENSE)
+Code: [GPL-3.0](LICENSE). Device images: CC BY 4.0, see [Credits](#credits).

@@ -10,8 +10,10 @@ them into the sprite strips the widget plays; frame 0 and the last frame both
 show the front.
 
 Without the model files the devices are built from primitives here. With them,
-the downloaded AirPods 4 (FBX) and iPhone 14 Pro (glTF converted from the
-Sketchfab COLLADA, plus its PBR texture folder) are rendered instead.
+these Sketchfab models (both CC BY 4.0) are rendered instead:
+  "AirPods 4" by Falah3D, sketchfab.com/3d-models/airpods-4-e44730974131402eb496352cab19c82e (FBX)
+  "iPhone 14 Pro" by mister dude, sketchfab.com/3d-models/iphone-14-pro-5cb0778041a34f09b409a38c687bb1d4
+  (its COLLADA converted to glTF, plus its PBR texture folder)
 """
 import argparse
 import math
