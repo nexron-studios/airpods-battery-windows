@@ -2,13 +2,21 @@
 import { computed } from 'vue'
 import type { BatteryTone } from '@/types/battery.type'
 
-const { percent, tone } = defineProps<{ percent: number | null; tone: BatteryTone }>()
+const { percent, tone, hasGlint } = defineProps<{
+  percent: number | null
+  tone: BatteryTone
+  /** A light runs once around the ring while the device model turns */
+  hasGlint: boolean
+}>()
 
 const VIEWBOX = 60
 const STROKE = 4
 const RADIUS = (VIEWBOX - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 const CENTER = VIEWBOX / 2
+const GLINT_ARC_SHARE = 0.14
+
+const glintDashArray = `${CIRCUMFERENCE * GLINT_ARC_SHARE} ${CIRCUMFERENCE}`
 
 const dashArray = computed(() => `${(CIRCUMFERENCE * (percent ?? 0)) / 100} ${CIRCUMFERENCE}`)
 
@@ -41,6 +49,17 @@ const strokeClass = computed(() => {
       stroke-linecap="round"
       :stroke-dasharray="dashArray"
       :class="strokeClass"
+    />
+    <circle
+      v-if="hasGlint"
+      :cx="CENTER"
+      :cy="CENTER"
+      :r="RADIUS"
+      fill="none"
+      :stroke-width="STROKE"
+      stroke-linecap="round"
+      :stroke-dasharray="glintDashArray"
+      class="origin-center stroke-device-glint opacity-0 animate-ring-glint [transform-box:fill-box]"
     />
   </svg>
 </template>

@@ -10,14 +10,12 @@ import type { DeviceKind } from '@/types/battery.type'
 
 const { kind, order } = defineProps<{
   kind: DeviceKind
-  /** Position in the row: offsets the idle float and places the model in the turn wave */
+  /** Position in the row: offsets the idle float */
   order: number
 }>()
 
 /** Spreads the floats of neighbouring models across one cycle */
 const FLOAT_PHASE_STEP_MS = 1300
-/** Lets the turn travel across the row as a wave instead of every model spinning at once */
-const TURN_STAGGER_MS = 220
 
 const turnSrc = computed((): string | null => {
   switch (kind) {
@@ -39,11 +37,14 @@ const turnSrc = computed((): string | null => {
 })
 
 const floatPhase = computed(() => ({ animationDelay: `-${order * FLOAT_PHASE_STEP_MS}ms` }))
-const turnDelay = computed(() => ({ '--turn-delay': `${order * TURN_STAGGER_MS}ms` }))
 </script>
 
 <template>
-  <div class="relative flex size-full items-center justify-center" :style="turnDelay">
+  <div class="relative flex size-full items-center justify-center">
+    <div
+      v-if="turnSrc"
+      class="absolute inset-0 rounded-full bg-radial from-device-bloom to-transparent to-70% opacity-0 animate-device-bloom"
+    />
     <div
       class="absolute bottom-0 left-1/2 h-1 w-3/5 -translate-x-1/2 rounded-full bg-device-ground blur-[2px] animate-device-ground"
       :style="floatPhase"

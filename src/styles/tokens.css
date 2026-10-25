@@ -5,7 +5,7 @@
  *   level-ok   → a battery that is fine or charging
  *   level-low  → a battery at or below the low threshold, and nothing else
  *   ink        → content; ink-muted for labels and notices
- *   device-*   → only the stage under the rendered device models, never UI chrome
+ *   device-*   → only the stage around the rendered device models, never UI chrome
  * Nothing else is allowed to introduce a hue.
  */
 @theme {
@@ -20,6 +20,10 @@
   --color-level-low: #ff453a;
 
   --color-device-ground: rgb(0 0 0 / 0.45);
+  /* Cool studio light that blooms behind a model while it turns */
+  --color-device-bloom: rgb(150 196 255 / 0.75);
+  /* The light that runs around a ring while its model turns */
+  --color-device-glint: rgb(235 245 255 / 0.95);
 
   /* Ratio 1.2 from 11 px */
   --text-caption: 0.6875rem;
@@ -44,6 +48,8 @@
   /* Every 30 s each model turns once; --turn-delay staggers it into a wave
      across the tiles. The easing lives in the keyframes as step segments. */
   --animate-device-turn: device-turn 30s linear var(--turn-delay, 0ms) infinite;
+  --animate-device-bloom: device-bloom 30s var(--ease-in-out-sine) var(--turn-delay, 0ms) infinite;
+  --animate-ring-glint: ring-glint 30s linear var(--turn-delay, 0ms) infinite;
   --animate-charge-pulse: charge-pulse 1.6s var(--ease-in-out-sine) infinite;
 }
 
@@ -57,6 +63,8 @@
     --color-level-ok: #28cd41;
     --color-level-low: #ff3b30;
     --color-device-ground: rgb(0 0 0 / 0.22);
+    --color-device-bloom: rgb(110 160 255 / 0.5);
+    --color-device-glint: rgb(255 255 255 / 0.95);
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.12), 0 6px 18px rgb(0 0 0 / 0.16);
   }
 }

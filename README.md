@@ -33,7 +33,9 @@ battery Windows already knows (your iPhone, a keyboard, a mouse) shows up next t
 
 - Exact levels for left, right and case, with a charging indicator
 - iPhone and every other Bluetooth device Windows reports a battery for
-- Rendered 3D models that turn once every 30 s, a ring per device, red at 20 % and below
+- Rendered 3D models that turn once every 30 s at 60 fps, with a soft glow behind them and a
+  light running around their ring
+- A ring per device, red at 20 % and below
 - Drag it anywhere; it remembers where you put it
 - Follows the Windows light or dark theme
 - Starts with Windows, sits in the tray, no window in the taskbar

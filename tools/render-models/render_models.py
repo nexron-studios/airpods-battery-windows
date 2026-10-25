@@ -6,7 +6,8 @@ Run headless, one model per call:
         --model airpod_right --out <dir> [--angles 0,90,180,270] [--size 160]         [--airpods-fbx <AirPods 4.fbx>] [--iphone-glb <iphone.glb> --iphone-textures <dir>]
 
 Every frame is a transparent PNG named by its index. `build_sprites.py` joins
-them into the sprite strips the widget plays.
+them into the sprite strips the widget plays; frame 0 and the last frame both
+show the front.
 
 Without the model files the devices are built from primitives here. With them,
 the downloaded AirPods 4 (FBX) and iPhone 14 Pro (glTF converted from the
@@ -21,7 +22,9 @@ import bmesh
 import bpy
 from mathutils import Euler, Matrix, Quaternion, Vector
 
-FULL_TURN_FRAMES = 48
+# 96 steps play at 60 fps over the widget's 1.6 s turn. The easing is baked
+# into the angles, so the widget can step through the frames evenly.
+FULL_TURN_FRAMES = 96
 CAMERA_ELEVATION_DEG = 14
 CAMERA_DISTANCE = 30.0
 FRAME_MARGIN = 1.08
@@ -501,6 +504,11 @@ def center_front_view(model):
     camera.data.ortho_scale = max(turn_fit, front_size / FRONT_VIEW_FILL)
 
 
+def smoothstep(share):
+    """Ease in and out: starts and stops at zero speed, fastest halfway."""
+    return share * share * (3 - 2 * share)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=MODELS, required=True)
@@ -539,7 +547,7 @@ def main():
     center_front_view(model)
 
     angles = [float(a) for a in args.angles.split(",")] if args.angles else [
-        360 * frame / FULL_TURN_FRAMES for frame in range(FULL_TURN_FRAMES + 1)]
+        360 * smoothstep(frame / FULL_TURN_FRAMES) for frame in range(FULL_TURN_FRAMES + 1)]
     args.out.mkdir(parents=True, exist_ok=True)
     for index, angle in enumerate(angles):
         pivot.rotation_euler = (0, 0, base_turn + math.radians(angle))

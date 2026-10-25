@@ -6,8 +6,8 @@ const { src } = defineProps<{
   src: string
 }>()
 
-/** Must match `--turn-frames` in main.css and the render script's FULL_TURN_FRAMES + 1 */
-const FRAME_COUNT = 49
+/** Must match the `device-turn` keyframes in main.css and FULL_TURN_FRAMES + 1 in the render script */
+const FRAME_COUNT = 97
 
 const stripWidth = computed(() => ({ width: `${FRAME_COUNT * 100}%` }))
 </script>

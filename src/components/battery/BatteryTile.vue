@@ -10,11 +10,17 @@ import { formatPercent } from '@/utils/format'
 
 const { kind, name, level, isStale, order } = defineProps<Omit<BatteryTileProps, 'id'> & { order: number }>()
 
+/** Lets the turn travel across the row as a wave instead of every model spinning at once */
+const TURN_STAGGER_MS = 220
+
 const { t, locale } = useI18n()
 
 const label = computed(() => name ?? t(`devices.${kind}`))
 const valueText = computed(() => (level ? formatPercent(locale.value, level.percent) : '–'))
 const isCharging = computed(() => level?.isCharging ?? false)
+
+// Read by the turn, bloom and ring glint animations of everything in the tile
+const turnDelay = computed(() => ({ '--turn-delay': `${order * TURN_STAGGER_MS}ms` }))
 
 const ariaLabel = computed(() => {
   if (!level) return t('tile.level_unknown', { name: label.value })
@@ -25,8 +31,13 @@ const ariaLabel = computed(() => {
 
 <template>
   <div class="flex w-16 flex-col items-center gap-1" role="img" :aria-label="ariaLabel">
-    <div class="relative size-14" :class="{ 'opacity-45': isStale }">
-      <BatteryRing class="absolute inset-0 size-full" :percent="level?.percent ?? null" :tone="toneOf(level)" />
+    <div class="relative size-14" :class="{ 'opacity-45': isStale }" :style="turnDelay">
+      <BatteryRing
+        class="absolute inset-0 size-full"
+        :percent="level?.percent ?? null"
+        :tone="toneOf(level)"
+        :hasGlint="kind !== 'other'"
+      />
       <div class="absolute inset-1">
         <DeviceModel :kind :order />
       </div>
