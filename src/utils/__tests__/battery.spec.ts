@@ -79,4 +79,8 @@ describe('airPodsNoticeOf', () => {
   it('should pass the missing keys state through', () => {
     expect(airPodsNoticeOf({ status: 'missing_keys' }, NOW_MS)).toEqual({ kind: 'missing_keys' })
   })
+
+  it('should pass the invalid config state through', () => {
+    expect(airPodsNoticeOf({ status: 'invalid_config' }, NOW_MS)).toEqual({ kind: 'invalid_config' })
+  })
 })

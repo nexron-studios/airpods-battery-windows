@@ -9,7 +9,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::airpods::{self, AirPodsBattery};
 use crate::ble_scanner::{AppleAdvert, BleScanner};
-use crate::config::{AirPodsKeys, Config};
+use crate::config::{AirPodsKeys, Config, ConfigError};
 use crate::device_battery::{self, DeviceBattery};
 
 pub const SNAPSHOT_EVENT: &str = "snapshot-changed";
@@ -22,6 +22,8 @@ const SEEN_REFRESH_MS: u64 = 30_000;
 #[serde(tag = "status", rename_all = "snake_case", rename_all_fields = "camelCase")]
 pub enum AirPodsStatus {
     MissingKeys,
+    /// config.json exists but cannot be read; details are in the log
+    InvalidConfig,
     /// Bluetooth is off or the adapter is gone
     Unavailable,
     Waiting,
@@ -147,10 +149,13 @@ fn poll_devices(app: &AppHandle, config: &Config) {
     });
 }
 
-pub fn start(app: &AppHandle, config: Config) {
-    let airpods = match config.airpods_keys {
-        Some(_) => AirPodsStatus::Waiting,
-        None => AirPodsStatus::MissingKeys,
+/// A broken config still starts the widget, so the Windows devices keep
+/// showing and the window can say what is wrong.
+pub fn start(app: &AppHandle, loaded: Result<Config, ConfigError>) {
+    let (config, airpods) = match loaded {
+        Ok(config) if config.airpods_keys.is_some() => (config, AirPodsStatus::Waiting),
+        Ok(config) => (config, AirPodsStatus::MissingKeys),
+        Err(_) => (Config::default(), AirPodsStatus::InvalidConfig),
     };
     app.manage(SnapshotState(Mutex::new(Snapshot { airpods, devices: Vec::new() })));
 

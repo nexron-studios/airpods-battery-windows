@@ -19,6 +19,7 @@ export interface BatteryTileProps {
 export type AirPodsNotice =
   | { kind: 'none' }
   | { kind: 'missing_keys' }
+  | { kind: 'invalid_config' }
   | { kind: 'unavailable' }
   | { kind: 'waiting' }
   | { kind: 'stale'; minutes: number }

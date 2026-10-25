@@ -5,7 +5,8 @@ export default {
     airpods_case: 'Case',
   },
   notice: {
-    missing_keys: 'AirPods keys are missing from config.json',
+    missing_keys: 'For the AirPods: right-click, Set up keys',
+    invalid_config: 'config.json is invalid. Right-click, Set up keys',
     unavailable: 'Bluetooth is off',
     waiting: 'Waiting for the AirPods. Open the case briefly.',
     stale: 'AirPods last seen a minute ago | AirPods last seen {n} minutes ago',
@@ -17,6 +18,8 @@ export default {
   },
   menu: {
     tooltip: 'Battery Widget',
+    setup_keys: 'Set up AirPods keys…',
+    restart: 'Restart',
     autostart: 'Start with Windows',
     quit: 'Quit',
   },

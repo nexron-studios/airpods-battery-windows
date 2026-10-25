@@ -5,6 +5,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import { onMounted, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { BatteryService } from '@/api/services/battery.service'
+import { logFailure } from '@/lib/log'
 
 const TRAY_ID = 'battery-widget'
 
@@ -23,11 +25,19 @@ export const useWidgetMenu = () => {
     const autostart: CheckMenuItem = await CheckMenuItem.new({
       text: t('menu.autostart'),
       checked: await isEnabled(),
-      action: () => toggleAutostart(autostart).catch((error) => console.error('toggling autostart failed', error)),
+      action: () => toggleAutostart(autostart).catch(logFailure('toggling autostart')),
+    })
+    const setupKeys = await MenuItem.new({
+      text: t('menu.setup_keys'),
+      action: () => BatteryService.openConfig().catch(logFailure('opening the config')),
+    })
+    const restart = await MenuItem.new({
+      text: t('menu.restart'),
+      action: () => BatteryService.restartApp().catch(logFailure('restarting')),
     })
     const quit = await MenuItem.new({ text: t('menu.quit'), action: () => getCurrentWindow().close() })
-    const separator = await PredefinedMenuItem.new({ item: 'Separator' })
-    return Menu.new({ items: [autostart, separator, quit] })
+    const separator = () => PredefinedMenuItem.new({ item: 'Separator' })
+    return Menu.new({ items: [setupKeys, restart, await separator(), autostart, await separator(), quit] })
   }
 
   // Reuses the tray icon across hot reloads instead of stacking new ones
@@ -44,7 +54,7 @@ export const useWidgetMenu = () => {
   }
 
   const openMenu = () => {
-    menu.value?.popup().catch((error) => console.error('opening the menu failed', error))
+    menu.value?.popup().catch(logFailure('opening the menu'))
   }
 
   onMounted(async () => {

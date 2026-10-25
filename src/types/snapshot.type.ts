@@ -13,6 +13,7 @@ export interface AirPodsBattery {
 
 export type AirPodsStatus =
   | { status: 'missing_keys' }
+  | { status: 'invalid_config' }
   | { status: 'unavailable' }
   | { status: 'waiting' }
   | { status: 'seen'; battery: AirPodsBattery; lastSeenMs: number }

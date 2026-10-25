@@ -40,6 +40,8 @@ export const airPodsNoticeOf = (airpods: AirPodsStatus, nowMs: number): AirPodsN
   switch (airpods.status) {
     case 'missing_keys':
       return { kind: 'missing_keys' }
+    case 'invalid_config':
+      return { kind: 'invalid_config' }
     case 'unavailable':
       return { kind: 'unavailable' }
     case 'waiting':

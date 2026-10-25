@@ -34,6 +34,7 @@ const noticeText = computed((): string | null => {
     case 'none':
       return null
     case 'missing_keys':
+    case 'invalid_config':
     case 'unavailable':
     case 'waiting':
       return t(`notice.${notice.kind}`)
