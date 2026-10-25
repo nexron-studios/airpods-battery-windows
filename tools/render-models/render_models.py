@@ -3,11 +3,14 @@
 Run headless, one model per call:
 
     blender --background --factory-startup --python render_models.py -- \
-        --model airpod_right --out <dir> [--angles 0,90,180,270] [--size 96]
+        --model airpod_right --out <dir> [--angles 0,90,180,270] [--size 160]         [--airpods-fbx <AirPods 4.fbx>] [--iphone-glb <iphone.glb> --iphone-textures <dir>]
 
 Every frame is a transparent PNG named by its index. `build_sprites.py` joins
-them into the sprite strips the widget plays. The geometry is built from
-primitives here, so the models are our own and carry no third-party licence.
+them into the sprite strips the widget plays.
+
+Without the model files the devices are built from primitives here. With them,
+the downloaded AirPods 4 (FBX) and iPhone 14 Pro (glTF converted from the
+Sketchfab COLLADA, plus its PBR texture folder) are rendered instead.
 """
 import argparse
 import math
@@ -16,7 +19,7 @@ from pathlib import Path
 
 import bmesh
 import bpy
-from mathutils import Euler, Quaternion, Vector
+from mathutils import Euler, Matrix, Quaternion, Vector
 
 FULL_TURN_FRAMES = 48
 CAMERA_ELEVATION_DEG = 14
@@ -265,6 +268,112 @@ def build_iphone():
     return parent_all("iphone", parts)
 
 
+# --- imported models ---------------------------------------------------------
+
+# Group empties in the AirPods 4 FBX. Its object names are scrambled, so these
+# are pinned to that one file.
+AIRPODS_FBX_GROUPS = {"airpod_left": "oTgukKFHsbAaGBa", "airpod_right": "MSpBhwzeYpJKGDV", "airpods_case": "PxcMCoFCCTCdsTC"}
+AIRPODS_FBX_LID = "nJoEOlgGwcdXBHJ"
+AIRPODS_FBX_CASE_BODY = "iqLXttIronNPiXb"
+
+
+def world_bounds(objects):
+    corners = [obj.matrix_world @ Vector(corner) for obj in objects if obj.type == "MESH" for corner in obj.bound_box]
+    low = Vector((min(c.x for c in corners), min(c.y for c in corners), min(c.z for c in corners)))
+    high = Vector((max(c.x for c in corners), max(c.y for c in corners), max(c.z for c in corners)))
+    return low, high
+
+
+def wrap_scene(name):
+    """Parents every top-level object to one root at the origin, so the model turns as a whole."""
+    root = link(bpy.data.objects.new(name, None))
+    for obj in list(bpy.context.scene.objects):
+        if obj is not root and obj.parent is None:
+            obj.parent = root
+    return root
+
+
+def close_case_lid():
+    """The FBX shows the case open; turn the lid about its hinge until it sits on the body."""
+    lid = bpy.data.objects[AIRPODS_FBX_LID]
+    lid_meshes = [lid, *lid.children_recursive]
+    body = bpy.data.objects[AIRPODS_FBX_CASE_BODY]
+    body_low, body_high = world_bounds([body, *body.children_recursive])
+    hinge = Vector((0, body_high.y - 0.001, body_high.z))
+    original = lid.matrix_world.copy()
+
+    def misfit(angle_deg):
+        turn = Matrix.Translation(hinge) @ Matrix.Rotation(math.radians(angle_deg), 4, "X") @ Matrix.Translation(-hinge)
+        lid.matrix_world = turn @ original
+        bpy.context.view_layer.update()
+        low, high = world_bounds(lid_meshes)
+        return abs(low.y - body_low.y) + abs(high.y - body_high.y) + abs(low.z - body_high.z)
+
+    best = min(range(-180, 181), key=misfit)
+    misfit(best)
+    print(f"case lid closed by turning {best} deg")
+
+
+def import_airpods_part(model, fbx):
+    bpy.ops.import_scene.fbx(filepath=str(fbx))
+    group = bpy.data.objects[AIRPODS_FBX_GROUPS[model]]
+    keep = {group, *group.children_recursive}
+    if model == "airpods_case":
+        close_case_lid()
+    for obj in [o for o in bpy.data.objects if o.type == "MESH" and o not in keep]:
+        bpy.data.objects.remove(obj)
+    return wrap_scene(model)
+
+
+def iphone_material(textures):
+    """The glTF from the COLLADA keeps only UVs; wire the Sketchfab PBR maps back in."""
+    material = bpy.data.materials.new("iphone")
+    nodes, links = material.node_tree.nodes, material.node_tree.links
+    bsdf = nodes["Principled BSDF"]
+
+    def texture(file, is_color):
+        node = nodes.new("ShaderNodeTexImage")
+        node.image = bpy.data.images.load(str(textures / file))
+        node.image.colorspace_settings.name = "sRGB" if is_color else "Non-Color"
+        return node
+
+    links.new(texture("Material_albedo.jpg", True).outputs["Color"], bsdf.inputs["Base Color"])
+    links.new(texture("Material_metallic.jpg", False).outputs["Color"], bsdf.inputs["Metallic"])
+    links.new(texture("Material_roughness.jpg", False).outputs["Color"], bsdf.inputs["Roughness"])
+    # Material_opacity.jpg is left out: wired to Alpha it lets the screen show
+    # through the back and the camera through the front
+    links.new(texture("Material_emissive.jpg", True).outputs["Color"], bsdf.inputs["Emission Color"])
+    # The emissive map also lights the Apple logo on the back; only faces
+    # pointing out of the screen side (+Y in the file) may glow
+    coords = nodes.new("ShaderNodeTexCoord")
+    facing = nodes.new("ShaderNodeSeparateXYZ")
+    is_screen_side = nodes.new("ShaderNodeMath")
+    is_screen_side.operation = "GREATER_THAN"
+    is_screen_side.inputs[1].default_value = 0.5
+    links.new(coords.outputs["Normal"], facing.inputs[0])
+    links.new(facing.outputs["Y"], is_screen_side.inputs[0])
+    links.new(is_screen_side.outputs[0], bsdf.inputs["Emission Strength"])
+    normal_map = nodes.new("ShaderNodeNormalMap")
+    links.new(texture("Material_normal.png", False).outputs["Color"], normal_map.inputs["Color"])
+    links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
+    return material
+
+
+def import_iphone(glb, textures):
+    bpy.ops.import_scene.gltf(filepath=str(glb))
+    material = iphone_material(textures)
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH":
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+    # The glTF importer already turns the file's Y-up into Blender's Z-up,
+    # which stands the phone upright. The file is in centimetres as plain
+    # units, 36 tall; scaled down so the studio lights stay outside the model.
+    root = wrap_scene("iphone")
+    root.scale = (IPHONE_GLB_SCALE,) * 3
+    return root
+
+
 MODELS = {
     "airpod_left": lambda: build_airpod(is_left=True),
     "airpod_right": lambda: build_airpod(is_left=False),
@@ -275,6 +384,9 @@ MODELS = {
 # Turn that faces the camera in frame 0: the grille side of a pod towards the
 # middle of the widget, the case and phone front-on.
 FRONT_TURN_DEG = {"airpod_left": -30, "airpod_right": 30, "airpods_case": 0, "iphone": 0}
+# The imported phone is modelled with its back towards -Y
+IPHONE_GLB_SCALE = 0.01
+IMPORTED_IPHONE_FRONT_TURN_DEG = 180
 
 
 # --- scene -------------------------------------------------------------------
@@ -350,6 +462,9 @@ def parse_args():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--size", type=int, default=160)
     parser.add_argument("--angles", help="comma-separated degrees for a preview instead of the full turn")
+    parser.add_argument("--airpods-fbx", type=Path, help="AirPods 4 model; without it the pods are built from primitives")
+    parser.add_argument("--iphone-glb", type=Path, help="iPhone model; needs --iphone-textures")
+    parser.add_argument("--iphone-textures", type=Path)
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
 
 
@@ -357,7 +472,12 @@ def main():
     args = parse_args()
     bpy.ops.wm.read_factory_settings(use_empty=True)
     setup_scene(args.size)
-    model = MODELS[args.model]()
+    if args.airpods_fbx and args.model in AIRPODS_FBX_GROUPS:
+        model = import_airpods_part(args.model, args.airpods_fbx)
+    elif args.iphone_glb and args.model == "iphone":
+        model = import_iphone(args.iphone_glb, args.iphone_textures)
+    else:
+        model = MODELS[args.model]()
     bpy.context.view_layer.update()
     center = setup_camera(model)
 
@@ -366,7 +486,9 @@ def main():
     pivot.location = center
     model.parent = pivot
     model.location -= center
-    base_turn = math.radians(FRONT_TURN_DEG[args.model])
+    is_imported_iphone = bool(args.iphone_glb) and args.model == "iphone"
+    front_turn = IMPORTED_IPHONE_FRONT_TURN_DEG if is_imported_iphone else FRONT_TURN_DEG[args.model]
+    base_turn = math.radians(front_turn)
 
     angles = [float(a) for a in args.angles.split(",")] if args.angles else [
         360 * frame / FULL_TURN_FRAMES for frame in range(FULL_TURN_FRAMES + 1)]
