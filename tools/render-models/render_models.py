@@ -436,11 +436,12 @@ def setup_scene(size):
 
 
 def setup_camera(model):
-    corners = []
-    for obj in [model, *model.children_recursive]:
-        if obj.type in {"MESH", "META"}:
-            corners += [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
-    center = sum(corners, Vector()) / len(corners)
+    meshes = [obj for obj in [model, *model.children_recursive] if obj.type == "MESH"]
+    corners = [obj.matrix_world @ Vector(corner) for obj in meshes for corner in obj.bound_box]
+    # The middle of the outer bounds, not the mean of all corners: a model made
+    # of many small parts (grilles, sensors) would pull the mean towards them
+    low, high = world_bounds(meshes)
+    center = (low + high) / 2
     # Every turn must fit: the horizontal reach is the largest distance from the turning axis
     reach = max(math.hypot(c.x - center.x, c.y - center.y) for c in corners)
     half_height = max(abs(c.z - center.z) for c in corners)
@@ -454,6 +455,32 @@ def setup_camera(model):
     camera.rotation_euler = (center - camera.location).to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = camera
     return center
+
+
+def center_front_view(model):
+    """Moves the camera so the resting front view sits exactly in the middle.
+
+    A pod is lopsided around its turning axis (bud on one side, stem on the
+    other), so centring the axis leaves the front view off-centre. The widget
+    shows the front view almost all the time; the turn may wander a little.
+    """
+    camera = bpy.context.scene.camera
+    right, up, _ = camera.matrix_world.to_3x3().transposed()
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    along_right, along_up = [], []
+    for obj in [o for o in [model, *model.children_recursive] if o.type == "MESH"]:
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh()
+        for vertex in mesh.vertices:
+            point = obj.matrix_world @ vertex.co
+            along_right.append(point.dot(right))
+            along_up.append(point.dot(up))
+        evaluated.to_mesh_clear()
+    shift_right = (min(along_right) + max(along_right)) / 2 - camera.location.dot(right)
+    shift_up = (min(along_up) + max(along_up)) / 2 - camera.location.dot(up)
+    camera.location += right * shift_right + up * shift_up
+    # Widen the frame by the shift, so the turn still fits on the far side
+    camera.data.ortho_scale += 2 * max(abs(shift_right), abs(shift_up))
 
 
 def parse_args():
@@ -489,6 +516,9 @@ def main():
     is_imported_iphone = bool(args.iphone_glb) and args.model == "iphone"
     front_turn = IMPORTED_IPHONE_FRONT_TURN_DEG if is_imported_iphone else FRONT_TURN_DEG[args.model]
     base_turn = math.radians(front_turn)
+    pivot.rotation_euler = (0, 0, base_turn)
+    bpy.context.view_layer.update()
+    center_front_view(model)
 
     angles = [float(a) for a in args.angles.split(",")] if args.angles else [
         360 * frame / FULL_TURN_FRAMES for frame in range(FULL_TURN_FRAMES + 1)]
