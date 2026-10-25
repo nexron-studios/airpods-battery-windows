@@ -25,6 +25,10 @@ FULL_TURN_FRAMES = 48
 CAMERA_ELEVATION_DEG = 14
 CAMERA_DISTANCE = 30.0
 FRAME_MARGIN = 1.08
+# Every model's front view covers the same share of its frame, measured as the
+# square root of its silhouette's width x height. Matching only the height
+# would make the squat case look far bigger than the slim pods.
+FRONT_VIEW_FILL = 0.52
 SAMPLES = 96
 
 WHITE_PLASTIC = (0.93, 0.93, 0.92, 1)
@@ -352,7 +356,11 @@ def iphone_material(textures):
     is_screen_side.inputs[1].default_value = 0.5
     links.new(coords.outputs["Normal"], facing.inputs[0])
     links.new(facing.outputs["Y"], is_screen_side.inputs[0])
-    links.new(is_screen_side.outputs[0], bsdf.inputs["Emission Strength"])
+    screen_glow = nodes.new("ShaderNodeMath")
+    screen_glow.operation = "MULTIPLY"
+    screen_glow.inputs[1].default_value = SCREEN_GLOW
+    links.new(is_screen_side.outputs[0], screen_glow.inputs[0])
+    links.new(screen_glow.outputs[0], bsdf.inputs["Emission Strength"])
     normal_map = nodes.new("ShaderNodeNormalMap")
     links.new(texture("Material_normal.png", False).outputs["Color"], normal_map.inputs["Color"])
     links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
@@ -366,6 +374,12 @@ def import_iphone(glb, textures):
         if obj.type == "MESH":
             obj.data.materials.clear()
             obj.data.materials.append(material)
+
+    # The metal back and the polished logo mirror the key light into a white
+    # blot, and the rim light behind leaks through the logo onto the screen.
+    # The key still lights the phone, it just stays out of its reflections.
+    bpy.data.objects.remove(bpy.data.objects["rim"])
+    bpy.data.objects["key"].visible_glossy = False
     # The glTF importer already turns the file's Y-up into Blender's Z-up,
     # which stands the phone upright. The file is in centimetres as plain
     # units, 36 tall; scaled down so the studio lights stay outside the model.
@@ -386,6 +400,8 @@ MODELS = {
 FRONT_TURN_DEG = {"airpod_left": -30, "airpod_right": 30, "airpods_case": 0, "iphone": 0}
 # The imported phone is modelled with its back towards -Y
 IPHONE_GLB_SCALE = 0.01
+# The display has to read on the widget's dark card at icon size
+SCREEN_GLOW = 1.8
 IMPORTED_IPHONE_FRONT_TURN_DEG = 180
 
 
@@ -480,7 +496,9 @@ def center_front_view(model):
     shift_up = (min(along_up) + max(along_up)) / 2 - camera.location.dot(up)
     camera.location += right * shift_right + up * shift_up
     # Widen the frame by the shift, so the turn still fits on the far side
-    camera.data.ortho_scale += 2 * max(abs(shift_right), abs(shift_up))
+    turn_fit = camera.data.ortho_scale + 2 * max(abs(shift_right), abs(shift_up))
+    front_size = math.sqrt((max(along_right) - min(along_right)) * (max(along_up) - min(along_up)))
+    camera.data.ortho_scale = max(turn_fit, front_size / FRONT_VIEW_FILL)
 
 
 def parse_args():
