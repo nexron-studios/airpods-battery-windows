@@ -42,10 +42,6 @@ const floatPhase = computed(() => ({ animationDelay: `-${order * FLOAT_PHASE_STE
 <template>
   <div class="relative flex size-full items-center justify-center">
     <div
-      v-if="turnSrc"
-      class="absolute inset-0 rounded-full bg-radial from-device-bloom to-transparent to-70% opacity-0 animate-device-bloom"
-    />
-    <div
       class="absolute bottom-0 left-1/2 h-1 w-3/5 -translate-x-1/2 rounded-full bg-device-ground blur-[2px] animate-device-ground"
       :style="floatPhase"
     />

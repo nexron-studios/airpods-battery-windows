@@ -51,23 +51,6 @@ body {
   }
 }
 
-/* A soft light blooms behind the model while it turns */
-@keyframes device-bloom {
-  0%,
-  100% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  2.4% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  7% {
-    transform: scale(1.3);
-    opacity: 0;
-  }
-}
-
 /* Runs once around the ring, in step with the model's turn; the ring's SVG
    starts at 3 o'clock and is turned to 12 by its -rotate-90 */
 @keyframes ring-glint {

@@ -19,7 +19,7 @@ const label = computed(() => name ?? t(`devices.${kind}`))
 const valueText = computed(() => (level ? formatPercent(locale.value, level.percent) : '–'))
 const isCharging = computed(() => level?.isCharging ?? false)
 
-// Read by the turn, bloom and ring glint animations of everything in the tile
+// Read by the turn and ring glint animations of everything in the tile
 const turnDelay = computed(() => ({ '--turn-delay': `${order * TURN_STAGGER_MS}ms` }))
 
 const ariaLabel = computed(() => {
